@@ -78,8 +78,8 @@ void FCFS() {
 }
 
 // SJF Scheduling (Non-preemptive)
-void SJF() {
-    cout << "\n=== Shortest Job First (SJF) Scheduling ===\n";
+void SJFNonPreemptive() {
+    cout << "\n=== Non-Preemptive Shortest Job First (SJF) Scheduling ===\n";
     int n;
     cout << "Enter number of processes: ";
     cin >> n;
@@ -125,9 +125,64 @@ void SJF() {
     displayResults(processes, total_wt / n, total_tt / n);
 }
 
+// SJF Scheduling (Preemptive)
+void SJFPreemptive() {
+    cout << "\n=== Preemptive Shortest Job First (SJF) Scheduling ===\n";
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    vector<Process> processes;
+    inputProcesses(processes, n);
+
+    vector<bool> completed(n, false);
+    int current_time = 0, completed_count = 0;
+    double total_wt = 0, total_tt = 0;
+
+    cout << "\nGantt Chart:\n";
+    while(completed_count < n) {
+        int idx = -1;
+        int min_remaining = INT_MAX;
+
+        for(int i = 0; i < n; i++) {
+            if(!completed[i] && processes[i].arrival_time <= current_time) {
+                if(processes[i].remaining_time < min_remaining) {
+                    min_remaining = processes[i].remaining_time;
+                    idx = i;
+                }
+            }
+        }
+
+        if(idx == -1) {
+            current_time++;
+            continue;
+        }
+
+        if(processes[idx].remaining_time == processes[idx].burst_time) {
+            processes[idx].start_time = current_time;
+        }
+
+        cout << current_time << " P" << processes[idx].id << " ";
+        current_time++;
+        processes[idx].remaining_time--;
+
+        if(processes[idx].remaining_time == 0) {
+            processes[idx].turnaround_time = current_time - processes[idx].arrival_time;
+            processes[idx].waiting_time = processes[idx].turnaround_time - processes[idx].burst_time;
+            total_wt += processes[idx].waiting_time;
+            total_tt += processes[idx].turnaround_time;
+            completed[idx] = true;
+            completed_count++;
+        }
+    }
+    cout << current_time << endl;
+
+    displayResults(processes, total_wt / n, total_tt / n);
+}
+
 // Priority Scheduling (Non-preemptive)
-void PriorityScheduling() {
-    cout << "\n=== Priority Scheduling ===\n";
+void PriorityNonPreemptive() {
+    cout << "\n=== Non-Preemptive Priority Scheduling ===\n";
     int n;
     cout << "Enter number of processes: ";
     cin >> n;
@@ -167,6 +222,61 @@ void PriorityScheduling() {
         total_tt += processes[idx].turnaround_time;
         completed[idx] = true;
         completed_count++;
+    }
+    cout << current_time << endl;
+
+    displayResults(processes, total_wt / n, total_tt / n);
+}
+
+// Priority Scheduling (Preemptive)
+void PriorityPreemptive() {
+    cout << "\n=== Preemptive Priority Scheduling ===\n";
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    vector<Process> processes;
+    inputProcesses(processes, n, true);
+
+    vector<bool> completed(n, false);
+    int current_time = 0, completed_count = 0;
+    double total_wt = 0, total_tt = 0;
+
+    cout << "\nGantt Chart:\n";
+    while(completed_count < n) {
+        int idx = -1;
+        int min_priority = INT_MAX;
+
+        for(int i = 0; i < n; i++) {
+            if(!completed[i] && processes[i].arrival_time <= current_time && processes[i].remaining_time > 0) {
+                if(processes[i].priority < min_priority) {
+                    min_priority = processes[i].priority;
+                    idx = i;
+                }
+            }
+        }
+
+        if(idx == -1) {
+            current_time++;
+            continue;
+        }
+
+        if(processes[idx].remaining_time == processes[idx].burst_time) {
+            processes[idx].start_time = current_time;
+        }
+
+        cout << current_time << " P" << processes[idx].id << " ";
+        current_time++;
+        processes[idx].remaining_time--;
+
+        if(processes[idx].remaining_time == 0) {
+            processes[idx].turnaround_time = current_time - processes[idx].arrival_time;
+            processes[idx].waiting_time = processes[idx].turnaround_time - processes[idx].burst_time;
+            total_wt += processes[idx].waiting_time;
+            total_tt += processes[idx].turnaround_time;
+            completed[idx] = true;
+            completed_count++;
+        }
     }
     cout << current_time << endl;
 
@@ -351,12 +461,14 @@ int main() {
     do {
         cout << "\n=== CPU Scheduling Algorithms Simulator ===\n";
         cout << "1. First Come First Served (FCFS)\n";
-        cout << "2. Shortest Job First (SJF)\n";
-        cout << "3. Priority Scheduling\n";
-        cout << "4. Round Robin\n";
-        cout << "5. Highest Response Ratio Next (HRRN) ⭐ NEW\n";
-        cout << "6. View Algorithm Comparison\n";
-        cout << "7. Exit\n";
+        cout << "2. Non-Preemptive Shortest Job First (SJF)\n";
+        cout << "3. Preemptive Shortest Job First (SJF)\n";
+        cout << "4. Non-Preemptive Priority Scheduling\n";
+        cout << "5. Preemptive Priority Scheduling\n";
+        cout << "6. Round Robin\n";
+        cout << "7. Highest Response Ratio Next (HRRN) ⭐ NEW\n";
+        cout << "8. View Algorithm Comparison\n";
+        cout << "9. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -365,27 +477,33 @@ int main() {
                 FCFS();
                 break;
             case 2:
-                SJF();
+                SJFNonPreemptive();
                 break;
             case 3:
-                PriorityScheduling();
+                SJFPreemptive();
                 break;
             case 4:
-                RoundRobin();
+                PriorityNonPreemptive();
                 break;
             case 5:
-                HRRN();
+                PriorityPreemptive();
                 break;
             case 6:
-                DisplayComparison();
+                RoundRobin();
                 break;
             case 7:
-                cout << "Exiting...\n";
+                HRRN();
+                break;
+            case 8:
+                DisplayComparison();
+                break;
+            case 9:
+                cout << "Thank you for using CPU Scheduler!\n";
                 break;
             default:
                 cout << "Invalid choice! Please try again.\n";
         }
-    } while(choice != 7);
+    } while(choice != 9);
 
     return 0;
 }
